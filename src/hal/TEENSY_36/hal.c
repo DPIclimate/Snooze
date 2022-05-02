@@ -839,13 +839,16 @@ void start_lptmr_systick( void ) {
     LPTMR0_CSR = LPTMR_CSR_TEN | LPTMR_CSR_TFC;
 }
 //----------------------------------------------------------------------------------
-void startup_early_hook( void ) {
-	// Setup watchdog timer
-	// clock source 0 LPO 1khz, timeout defined in ms below
-	WDOG_TOVALL = 15000; // Sets the time-out value. This is the value that the watchdog timer compare itself to in ms.
-	WDOG_TOVALH = 0;
-	WDOG_STCTRLH = (WDOG_STCTRLH_ALLOWUPDATE); // Enable WDG
-	WDOG_PRESC = 0; // Prescaler
+__attribute__((weak)) void startup_early_hook( void ) {
+#if defined(KINETISK)
+	WDOG_STCTRLH = WDOG_STCTRLH_ALLOWUPDATE;
+#elif defined(KINETISL)
+	SIM_COPC = 0;  // disable the watchdog
+#endif
+	if ( PMC_REGSC & PMC_REGSC_ACKISO ) {
+		//llwuMask.llwuFlag = llwu_clear_flags( );// clear flags
+		//llwuMask.wakeupSource = llwu_disable( );
+	}
 }
 //----------------------------------------------------------------------------------
 void llwu_configure_filter( unsigned int pin_num, unsigned char filter_en, unsigned char rise_fall ) {
